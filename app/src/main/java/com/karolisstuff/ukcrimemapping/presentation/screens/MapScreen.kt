@@ -1,4 +1,4 @@
-package com.karolisstuff.ukcrimemapping.screens
+package com.karolisstuff.ukcrimemapping.presentation.screens
 
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,8 +21,8 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.karolisstuff.ukcrimemapping.components.SearchBar
-import com.karolisstuff.ukcrimemapping.viewmodel.MapViewModel
+import com.karolisstuff.ukcrimemapping.presentation.components.SearchBar
+import com.karolisstuff.ukcrimemapping.presentation.viewmodel.MapViewModel
 import timber.log.Timber
 
 @Composable

@@ -1,4 +1,4 @@
-package com.karolisstuff.ukcrimemapping.viewmodel
+package com.karolisstuff.ukcrimemapping.presentation.viewmodel
 
 import android.content.Context
 import android.content.pm.PackageManager

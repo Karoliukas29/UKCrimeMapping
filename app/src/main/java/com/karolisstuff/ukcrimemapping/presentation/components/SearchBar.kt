@@ -1,4 +1,4 @@
-package com.karolisstuff.ukcrimemapping.components
+package com.karolisstuff.ukcrimemapping.presentation.components
 
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
