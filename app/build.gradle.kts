@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    id("kotlin-kapt")
 }
 
 android {
@@ -50,7 +52,7 @@ android {
 }
 
 dependencies {
-
+    // Core dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,6 +61,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,12 +71,31 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // Google Maps SDK for Android
+    // Google Maps SDK and Compose
     implementation(libs.places)
     implementation(libs.play.services.maps)
-
-// Google maps Compose
     implementation(libs.maps.compose)
 
+    // Logging
     implementation(libs.timber)
+
+    // Ktor for Networking
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.client.json)
+
+    // Hilt for Dependency Injection
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler) // Correct usage of the Hilt annotation processor
+
+    // Kotlin Coroutines & Flow
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Hilt Compose Integration
+    implementation(libs.androidx.hilt.navigation.compose)
 }
