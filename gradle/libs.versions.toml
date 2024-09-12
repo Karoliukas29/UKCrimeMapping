@@ -10,9 +10,11 @@ kotlinxCoroutinesAndroid = "1.8.0"
 kotlinxCoroutinesCore = "1.6.1"
 kotlinxSerializationJson = "1.3.2"
 ktorClientCio = "2.0.0"
+ktorClientContentNegotiation = "2.0.0"
 ktorClientCore = "2.0.0"
 ktorClientJson = "2.0.0"
 ktorClientSerialization = "2.0.0"
+ktorSerializationKotlinxJson = "2.0.0"
 lifecycleRuntimeKtx = "2.8.5"
 activityCompose = "1.9.2"
 composeBom = "2024.09.00"
@@ -46,6 +48,8 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClien
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-client-json = { module = "io.ktor:ktor-client-json", version.ref = "ktorClientJson" }
 ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktorClientSerialization" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorClientContentNegotiation" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorSerializationKotlinxJson" }
 
 # Hilt for Dependency Injection
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
