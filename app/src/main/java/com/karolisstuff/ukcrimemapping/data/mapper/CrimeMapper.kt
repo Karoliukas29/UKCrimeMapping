@@ -8,6 +8,8 @@ fun CrimeResponseItem.toDomain(): Crime {
         category = this.category,
         latitude = this.location.latitude.toDouble(),
         longitude = this.location.longitude.toDouble(),
-        outcome = this.outcomeStatus?.category ?: "Unknown"
+        outcome = this.outcomeStatus?.category ?: "Unknown",
+        date = this.month,
+        street = this.location.street.name
     )
 }
