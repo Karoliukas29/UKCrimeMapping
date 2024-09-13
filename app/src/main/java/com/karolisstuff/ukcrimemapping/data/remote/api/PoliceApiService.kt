@@ -3,7 +3,6 @@ package com.karolisstuff.ukcrimemapping.data.remote.api
 import com.karolisstuff.ukcrimemapping.data.model.CrimeResponseItem
 import io.ktor.client.*
 import io.ktor.client.call.body
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import android.util.Log
@@ -22,20 +21,20 @@ class PoliceApiService(private val client: HttpClient) {
                 parameter("date", date)
             }
 
-            Log.d("PoliceApiService", "API Response status: ${response.status}")
+            Log.d("PoliceApiService", "!!!!!!API Response status: ${response.status}")
 
             if (response.status.isSuccess()) {
                 // Log raw response body for debugging
                 val rawResponse = response.bodyAsText()
-                Log.d("PoliceApiService", "Raw API Response: $rawResponse")
+                Log.d("PoliceApiService", "!!!!!!Raw API Response: $rawResponse")
 
                 // Parse the response as a list of CrimeResponseItem
                 val crimeResponse: List<CrimeResponseItem> = response.body() // Correct deserialization
-                Log.d("PoliceApiService", "Crimes fetched successfully: ${crimeResponse.size} crimes")
+                Log.d("PoliceApiService", "!!!!!!Crimes fetched successfully: ${crimeResponse.size} crimes")
 
                 crimeResponse // Return the list of crimes
             } else {
-                Log.e("PoliceApiService", "Failed to fetch crimes: ${response.status}, Body: ${response.bodyAsText()}")
+                Log.e("PoliceApiService", "!!!!!!Failed to fetch crimes: ${response.status}, Body: ${response.bodyAsText()}")
                 emptyList() // Return an empty list if the response is not successful
             }
 
