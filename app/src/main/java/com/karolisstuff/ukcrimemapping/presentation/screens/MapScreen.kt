@@ -4,7 +4,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,17 +20,14 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.karolisstuff.ukcrimemapping.domain.model.Crime
+import com.karolisstuff.ukcrimemapping.presentation.components.CrimeDetailsDialog
 import com.karolisstuff.ukcrimemapping.presentation.components.SearchBar
 import com.karolisstuff.ukcrimemapping.presentation.viewmodel.MapViewModel
 import com.karolisstuff.ukcrimemapping.presentation.viewmodel.CrimeViewModel
+import com.karolisstuff.ukcrimemapping.utils.addJitterToCoordinates
 import timber.log.Timber
 
-
-// Function to add a slight jitter to the coordinates to prevent marker overlap
-fun addJitterToCoordinates(lat: Double, lng: Double, index: Int): Pair<Double, Double> {
-    val jitter = 0.0009 * (index % 5) // Adjust the multiplier for better spacing
-    return Pair(lat + jitter, lng + jitter)
-}
 
 @Composable
 fun MapScreen(
@@ -50,7 +47,14 @@ fun MapScreen(
     val crimes by crimeViewModel.crimes.collectAsState()
     val isLoading by crimeViewModel.isLoading.collectAsState()
 
+    // States to control the dialog visibility and selected crime
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedCrime by remember { mutableStateOf<Crime?>(null) }
+
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    val existingCoordinates = mutableSetOf<Pair<Double, Double>>() // Set to track used coordinates
+
 
     // Handle location permission
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -66,26 +70,32 @@ fun MapScreen(
     // Request location permission on launch
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) -> {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) -> {
                 mapViewModel.fetchUserLocation(context, fusedLocationClient)
             }
+
             else -> {
                 permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
 
-    // ** Trigger Crime Fetching on User Location **
-    var isCameraMoved by remember { mutableStateOf(false) }
+    // ** Trigger Crime Fetching on User Location and move camera **
+    var isCameraMovedToUserLocation by remember { mutableStateOf(false) }
+
     LaunchedEffect(userLocation) {
         userLocation?.let { location ->
             crimeViewModel.fetchUserLocation(location.latitude, location.longitude)
 
-            if (!isCameraMoved) {
+            // Move the camera to user's location only once
+            if (!isCameraMovedToUserLocation) {
                 cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(location, 15f)
+                    CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude, location.longitude), 15f)
                 )
-                isCameraMoved = true
+                isCameraMovedToUserLocation = true
             }
         }
     }
@@ -131,16 +141,33 @@ fun MapScreen(
             ) {
                 // Show crime markers on the map, applying jitter to avoid overlapping markers
                 crimes.forEachIndexed { index, crime ->
-                    val (adjustedLat, adjustedLng) = addJitterToCoordinates(crime.latitude, crime.longitude, index)
+                    val (adjustedLat, adjustedLng) = addJitterToCoordinates(
+                        crime.latitude,
+                        crime.longitude,
+                        index,
+                        existingCoordinates
+                    )
                     Marker(
                         state = MarkerState(position = LatLng(adjustedLat, adjustedLng)),
                         title = crime.category,
-                        snippet = crime.outcome
+                        snippet = "Click for details", // Short description
+
+                        // On clicking the info window, show detailed info in a dialog
+                        onInfoWindowClick = {
+                            selectedCrime = crime // Set the selected crime
+                            showDialog = true // Show the dialog
+                        }
                     )
                 }
             }
         }
     }
+
+    // Display the dialog with crime details
+    if (showDialog && selectedCrime != null) {
+        CrimeDetailsDialog(
+            crime = selectedCrime!!,
+            onDismiss = { showDialog = false }
+        )
+    }
 }
-
-
