@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlinx.serialization)
     id("kotlin-kapt")
 }
 
@@ -90,6 +91,11 @@ dependencies {
     // Hilt for Dependency Injection
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler) // Correct usage of the Hilt annotation processor
+    // Hilt Compose Integration
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation(libs.javaPoet)
+
 
     // Kotlin Coroutines & Flow
     implementation(libs.kotlinx.coroutines.core)
@@ -98,6 +104,4 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Hilt Compose Integration
-    implementation(libs.androidx.hilt.navigation.compose)
 }

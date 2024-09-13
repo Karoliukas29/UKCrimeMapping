@@ -3,14 +3,10 @@ package com.karolisstuff.ukcrimemapping.presentation.screens
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -23,86 +19,97 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.karolisstuff.ukcrimemapping.presentation.components.SearchBar
 import com.karolisstuff.ukcrimemapping.presentation.viewmodel.MapViewModel
+import com.karolisstuff.ukcrimemapping.presentation.viewmodel.CrimeViewModel
 import timber.log.Timber
 
 @Composable
-fun MapScreen(mapViewModel: MapViewModel) {
-    // Initialize the camera position state, which controls the camera's position on the map
+fun MapScreen(
+    mapViewModel: MapViewModel, // Continue using MapViewModel for user and selected locations
+    crimeViewModel: CrimeViewModel // Add CrimeViewModel to fetch and display crimes
+) {
     val cameraPositionState = rememberCameraPositionState()
-    // Obtain the current context
     val context = LocalContext.current
-    // Observe the user's location from the ViewModel
+
+    // Observe user location from MapViewModel
     val userLocation by mapViewModel.userLocation
+
+    // Observe crimes from CrimeViewModel
+    val crimes by crimeViewModel.crimes.collectAsState()
+    val isLoading by crimeViewModel.isLoading.collectAsState()
+
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // Observe the selected location from the ViewModel
-    val selectedLocation by mapViewModel.selectedLocation
-
-    // Handle permission requests for accessing fine location
+    // Handle location permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Fetch the user's location and update the camera if permission is granted
             mapViewModel.fetchUserLocation(context, fusedLocationClient)
         } else {
-            // Handle the case when permission is denied
             Timber.e("Location permission was denied by the user.")
         }
     }
 
-    // Request the location permission when the composable is launched
+    // Request location permission on launch
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
-            // Check if the location permission is already granted
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                // Fetch the user's location and update the camera
                 mapViewModel.fetchUserLocation(context, fusedLocationClient)
             }
             else -> {
-                // Request the location permission if it has not been granted
                 permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
 
-    // Layout that includes the search bar and the map, arranged in a vertical column
-    Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(modifier = Modifier.height(18.dp)) // Add a spacer with a height of 18dp to push the search bar down
+    // When userLocation is updated, trigger CrimeViewModel to fetch crimes
+    LaunchedEffect(userLocation) {
+        userLocation?.let { location ->
+            crimeViewModel.fetchUserLocation(location.latitude, location.longitude)
+        }
+    }
 
-        // Add the search bar component
+    Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Search bar to update selected location
         SearchBar(
             onPlaceSelected = { place ->
-                // When a place is selected from the search bar, update the selected location
                 mapViewModel.selectLocation(place, context)
             }
         )
 
-        // Display the Google Map
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
-        ) {
-            // If the user's location is available, place a marker on the map
-            userLocation?.let {
-                Marker(
-                    state = MarkerState(position = it), // Place the marker at the user's location
-                    title = "Your Location", // Set the title for the marker
-                    snippet = "This is where you are currently located." // Set the snippet for the marker
-                )
-                // Move the camera to the user's location with a zoom level of 10f
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+        // Show loading indicator while fetching crimes
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
+        } else {
+            // Display the Google Map with user location and crime markers
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState
+            ) {
+                // Show the user's location marker
+                userLocation?.let {
+                    Marker(
+                        state = MarkerState(position = it),
+                        title = "Your Location"
+                    )
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+                }
 
-            // If a location was selected from the search bar, place a marker there
-            selectedLocation?.let {
-                Marker(
-                    state = MarkerState(position = it), // Place the marker at the selected location
-                    title = "Selected Location", // Set the title for the marker
-                    snippet = "This is the place you selected." // Set the snippet for the marker
-                )
-                // Move the camera to the selected location with a zoom level of 15f
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                // Show crime markers on the map
+                crimes.forEach { crime ->
+                    Marker(
+                        state = MarkerState(position = com.google.android.gms.maps.model.LatLng(crime.latitude, crime.longitude)),
+                        title = crime.category,
+                        snippet = crime.outcome
+                    )
+                }
             }
         }
     }
