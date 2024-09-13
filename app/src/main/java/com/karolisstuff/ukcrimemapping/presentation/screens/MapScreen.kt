@@ -12,8 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -22,16 +25,26 @@ import com.karolisstuff.ukcrimemapping.presentation.viewmodel.MapViewModel
 import com.karolisstuff.ukcrimemapping.presentation.viewmodel.CrimeViewModel
 import timber.log.Timber
 
+
+// Function to add a slight jitter to the coordinates to prevent marker overlap
+fun addJitterToCoordinates(lat: Double, lng: Double, index: Int): Pair<Double, Double> {
+    val jitter = 0.00005 * (index % 5) // Adjust the multiplier for better spacing
+    return Pair(lat + jitter, lng + jitter)
+}
+
 @Composable
 fun MapScreen(
-    mapViewModel: MapViewModel, // Continue using MapViewModel for user and selected locations
-    crimeViewModel: CrimeViewModel // Add CrimeViewModel to fetch and display crimes
+    mapViewModel: MapViewModel,
+    crimeViewModel: CrimeViewModel
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
 
     // Observe user location from MapViewModel
     val userLocation by mapViewModel.userLocation
+
+    // Observe selected location from MapViewModel
+    val selectedLocation by mapViewModel.selectedLocation
 
     // Observe crimes from CrimeViewModel
     val crimes by crimeViewModel.crimes.collectAsState()
@@ -62,10 +75,27 @@ fun MapScreen(
         }
     }
 
-    // When userLocation is updated, trigger CrimeViewModel to fetch crimes
+    // ** Trigger Crime Fetching on User Location **
+    var isCameraMoved by remember { mutableStateOf(false) }
     LaunchedEffect(userLocation) {
         userLocation?.let { location ->
             crimeViewModel.fetchUserLocation(location.latitude, location.longitude)
+
+            if (!isCameraMoved) {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(location, 15f)
+                )
+                isCameraMoved = true
+            }
+        }
+    }
+
+    // Update the camera position when a new location is selected from the SearchBar
+    LaunchedEffect(selectedLocation) {
+        selectedLocation?.let {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(it, 15f)
+            )
         }
     }
 
@@ -75,7 +105,7 @@ fun MapScreen(
         // Search bar to update selected location
         SearchBar(
             onPlaceSelected = { place ->
-                mapViewModel.selectLocation(place, context)
+                mapViewModel.selectLocation(place, context, crimeViewModel)
             }
         )
 
@@ -91,21 +121,19 @@ fun MapScreen(
             // Display the Google Map with user location and crime markers
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = true
+                ),
+                uiSettings = MapUiSettings(
+                    myLocationButtonEnabled = true
+                )
             ) {
-                // Show the user's location marker
-                userLocation?.let {
+                // Show crime markers on the map, applying jitter to avoid overlapping markers
+                crimes.forEachIndexed { index, crime ->
+                    val (adjustedLat, adjustedLng) = addJitterToCoordinates(crime.latitude, crime.longitude, index)
                     Marker(
-                        state = MarkerState(position = it),
-                        title = "Your Location"
-                    )
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
-                }
-
-                // Show crime markers on the map
-                crimes.forEach { crime ->
-                    Marker(
-                        state = MarkerState(position = com.google.android.gms.maps.model.LatLng(crime.latitude, crime.longitude)),
+                        state = MarkerState(position = LatLng(adjustedLat, adjustedLng)),
                         title = crime.category,
                         snippet = crime.outcome
                     )
@@ -114,3 +142,5 @@ fun MapScreen(
         }
     }
 }
+
+

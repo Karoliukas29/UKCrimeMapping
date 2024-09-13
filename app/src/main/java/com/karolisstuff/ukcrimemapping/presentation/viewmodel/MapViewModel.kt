@@ -48,18 +48,19 @@ class MapViewModel: ViewModel() {
     }
 
     // Function to geocode the selected place and update the selected location state
-    fun selectLocation(selectedPlace: String, context: Context) {
+    fun selectLocation(selectedPlace: String, context: Context, crimeViewModel: CrimeViewModel) {
         viewModelScope.launch {
             val geocoder = Geocoder(context)
             val addresses = withContext(Dispatchers.IO) {
-                // Perform geocoding on a background thread
                 geocoder.getFromLocationName(selectedPlace, 1)
             }
             if (!addresses.isNullOrEmpty()) {
-                // Update the selected location in the state
                 val address = addresses[0]
                 val latLng = LatLng(address.latitude, address.longitude)
                 _selectedLocation.value = latLng
+
+                // Notify CrimeViewModel to fetch crime data based on the new location
+                crimeViewModel.fetchUserLocation(address.latitude, address.longitude)
             } else {
                 Timber.tag("MapScreen").e("No location found for the selected place.")
             }

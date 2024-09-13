@@ -1,12 +1,9 @@
 package com.karolisstuff.ukcrimemapping.domain.usecase
 
-
-import android.util.Log
 import com.karolisstuff.ukcrimemapping.domain.model.Crime
 import com.karolisstuff.ukcrimemapping.domain.repository.CrimeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -25,9 +22,11 @@ class GetCrimesUseCase @Inject constructor(
             currentDate.minusMonths(2).format(formatter),
             currentDate.minusMonths(3).format(formatter),
             currentDate.minusMonths(4).format(formatter),
-            currentDate.minusMonths(5).format(formatter)
+            currentDate.minusMonths(5).format(formatter),
+            currentDate.minusMonths(6).format(formatter),
 
-        )
+
+            )
 
         val crimesForAllMonths = mutableListOf<Crime>()
         for (date in datesToFetch) {
