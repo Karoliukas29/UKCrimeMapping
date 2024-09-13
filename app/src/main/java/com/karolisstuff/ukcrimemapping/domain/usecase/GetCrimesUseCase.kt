@@ -32,8 +32,12 @@ class GetCrimesUseCase @Inject constructor(
         for (date in datesToFetch) {
             repository.getCrimes(lat, lng, date).collect { crimes ->
                 crimesForAllMonths.addAll(crimes)
+                println("Crimes for $date: ${crimes.size}")
+
             }
         }
+        println("------------Total crimes collected: ${crimesForAllMonths.size}")
+
         emit(crimesForAllMonths)
     }
 }

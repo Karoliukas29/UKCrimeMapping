@@ -28,7 +28,7 @@ import timber.log.Timber
 
 // Function to add a slight jitter to the coordinates to prevent marker overlap
 fun addJitterToCoordinates(lat: Double, lng: Double, index: Int): Pair<Double, Double> {
-    val jitter = 0.00005 * (index % 5) // Adjust the multiplier for better spacing
+    val jitter = 0.0009 * (index % 5) // Adjust the multiplier for better spacing
     return Pair(lat + jitter, lng + jitter)
 }
 
