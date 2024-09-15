@@ -1,0 +1,2 @@
+In this project, we built a complete crime mapping app using MVVM, Jetpack Compose, Ktor, Hilt, and the Google Maps SDK. We implemented a clean architecture where the UI observes the ViewModel, which in turn interacts with the Use Case layer to fetch and process crime data for the last six months
+https://medium.com/@karollismarmokas/building-a-uk-crime-mapping-app-with-mvvm-jetpack-compose-ktor-hilt-and-google-maps-c7d32d316d72
