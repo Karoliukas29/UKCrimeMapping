@@ -7,5 +7,4 @@ data class Crime(
     val outcome: String,
     val date: String,
     val street: String
-
 )
